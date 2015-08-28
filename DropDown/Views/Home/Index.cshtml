@@ -1,0 +1,86 @@
+﻿@{
+    Layout = null;
+    //var sportList = (IEnumerable<SelectList>)ViewData["AllSports"];
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <link rel="stylesheet" href="~/css/jquery.multiselect.css">
+    <link rel="stylesheet" href="~/css/jquery.multiselect.filter.css">
+</head>
+<body>
+    @Html.DropDownList("AllSports", null, new { @class="multiSports", @id="multiSports" })
+
+    <input type="button" value="Click" id="btnLoad">
+    <br>
+
+    @Html.DropDownList("AllEvents", null, new { @class = "multiEvents", @id = "multiEvents" })
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" type="text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+    <script src="~/js/jquery.multiselect.min.js"></script>
+    <script src="~/js/jquery.multiselect.filter.js"></script>
+    <script>
+        //Document Load
+        $(document).ready(function () {
+
+            //Convert Sport dropdown to Multi sports
+		    $("#multiSports").multiselect({
+                show: "blind",
+                noneSelectedText: "Select Sport(s)",
+                selectedText: "# Sport(s)",
+                minWidth: 300,
+                uncheckAll: function () {
+
+                    //On uncheck all Empty the Event list
+                    $("#multiEvents").html('');
+                    $("#multiEvents").multiselect('refresh');
+                },
+		    }).multiselectfilter();
+
+
+            //Convert Empty Events dropdown to Multi sports
+		    $("#multiEvents").multiselect({
+		        show: "blind",
+		        noneSelectedText: "Select Event(s)",
+		        selectedText: "# Event(s)",
+		        minWidth: 300
+		    }).multiselectfilter();
+
+            //Clock of the button
+			$("#btnLoad").click(function(){
+				var selectedList=[];
+				$('#multiSports').multiselect("widget").find("input:checked").each(function () {
+					selectedList.push(parseInt($(this).val()));
+				});
+				console.log(selectedList);
+			    //Call server
+				$.ajax({
+				    type: "POST",
+				    url: "/Home/GetEventsBySportId",
+				    data: { "sportIds": selectedList },
+				    dataType: "json",
+				    success: function (events) {
+				       
+                        //Empty the previously present Events if any
+				        $("#multiEvents").html('');
+
+                        //Append the Events
+				        $.each(events, function (key, event) {
+				            $("#multiEvents").append($("<option></option>").val
+                            (event.Id).html(event.EventName));
+				        });
+				        //Refresh the multiselect list
+				        $("#multiEvents").multiselect('refresh');
+				    }
+				});
+
+			});
+
+		});
+    </script>
+</body>
+</html>
